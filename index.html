@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Alan Takip Pro</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <style>
+        :root { --ana-renk: #007AFF; --duzenle-renk: #5856D6; --sil-renk: #FF3B30; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: #f2f2f7; margin: 0; padding: env(safe-area-inset-top) 15px 20px 15px; }
+        .container { max-width: 500px; margin: auto; }
+        h2 { text-align: center; margin-top: 20px; color: #1c1c1e; }
+        
+        .card { background: white; padding: 15px; border-radius: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        input { width: 100%; padding: 14px; margin: 8px 0; border: 1px solid #d1d1d6; border-radius: 10px; box-sizing: border-box; font-size: 16px; outline: none; }
+        input:focus { border-color: var(--ana-renk); }
+        
+        .btn-group { display: flex; gap: 10px; margin-top: 5px; }
+        button { flex: 1; padding: 14px; border: none; border-radius: 10px; font-weight: 600; font-size: 15px; cursor: pointer; color: white; transition: opacity 0.2s; }
+        button:active { opacity: 0.7; }
+        
+        .btn-save { background: var(--ana-renk); }
+        .btn-cancel { background: #8e8e93; display: none; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { text-align: left; color: #8e8e93; font-size: 13px; text-transform: uppercase; padding-bottom: 8px; }
+        td { padding: 12px 0; border-bottom: 0.5px solid #d1d1d6; font-size: 16px; }
+        
+        .actions { display: flex; gap: 8px; justify-content: flex-end; }
+        .action-btn { padding: 6px 10px; font-size: 12px; width: auto; flex: none; }
+        .edit-btn { background: var(--duzenle-renk); }
+        .delete-btn { background: var(--sil-renk); }
+        
+        .empty-msg { text-align: center; padding: 20px; color: #8e8e93; font-style: italic; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2 id="baslik">Alan Kaydı</h2>
+
+    <div class="card">
+        <input type="hidden" id="editId">
+        <input type="text" id="alanAdi" placeholder="Alan Adı (örn: Salon)">
+        <input type="number" id="alanDegeri" placeholder="Ölçü (m²)">
+        
+        <div class="btn-group">
+            <button id="saveBtn" class="btn-save" onclick="veriyiKaydet()">Ekle</button>
+            <button id="cancelBtn" class="btn-cancel" onclick="formuSifirla()">Vazgeç</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <table>
+            <thead>
+                <tr>
+                    <th>Alan</th>
+                    <th>Ölçü</th>
+                    <th style="text-align:right">İşlem</th>
+                </tr>
+            </thead>
+            <tbody id="tabloGövdesi"></tbody>
+        </table>
+        <div id="bosMesaj" class="empty-msg">Kayıt bulunamadı.</div>
+    </div>
+</div>
+
+<script>
+    window.onload = listele;
+
+    function veriyiKaydet() {
+        const ad = document.getElementById('alanAdi').value;
+        const deger = document.getElementById('alanDegeri').value;
+        const editId = document.getElementById('editId').value;
+
+        if (!ad || !deger) {
+            alert("Boş alan bırakmayın!");
+            return;
+        }
+
+        let veriler = JSON.parse(localStorage.getItem('alanBilgileri')) || [];
+
+        if (editId) {
+            // Düzenleme Modu
+            veriler = veriler.map(v => v.id == editId ? { ...v, ad, deger } : v);
+        } else {
+            // Yeni Kayıt Modu
+            veriler.push({ id: Date.now(), ad, deger });
+        }
+        
+        localStorage.setItem('alanBilgileri', JSON.stringify(veriler));
+        formuSifirla();
+        listele();
+    }
+
+    function listele() {
+        const veriler = JSON.parse(localStorage.getItem('alanBilgileri')) || [];
+        const gövde = document.getElementById('tabloGövdesi');
+        const bosMesaj = document.getElementById('bosMesaj');
+
+        if (veriler.length === 0) {
+            gövde.innerHTML = '';
+            bosMesaj.style.display = 'block';
+            return;
+        }
+
+        bosMesaj.style.display = 'none';
+        gövde.innerHTML = veriler.map(v => `
+            <tr>
+                <td><strong>${v.ad}</strong></td>
+                <td>${v.deger} m²</td>
+                <td class="actions">
+                    <button class="action-btn edit-btn" onclick="veriyiDuzenle(${v.id})">Düzelt</button>
+                    <button class="action-btn delete-btn" onclick="veriyiSil(${v.id})">Sil</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function veriyiDuzenle(id) {
+        const veriler = JSON.parse(localStorage.getItem('alanBilgileri')) || [];
+        const veri = veriler.find(v => v.id == id);
+        
+        if (veri) {
+            document.getElementById('alanAdi').value = veri.ad;
+            document.getElementById('alanDegeri').value = veri.deger;
+            document.getElementById('editId').value = veri.id;
+            
+            // Görünümü Değiştir
+            document.getElementById('saveBtn').innerText = "Güncelle";
+            document.getElementById('saveBtn').style.background = "var(--duzenle-renk)";
+            document.getElementById('cancelBtn').style.display = "block";
+            document.getElementById('baslik').innerText = "Kaydı Düzenle";
+            window.scrollTo(0,0);
+        }
+    }
+
+    function formuSifirla() {
+        document.getElementById('alanAdi').value = '';
+        document.getElementById('alanDegeri').value = '';
+        document.getElementById('editId').value = '';
+        document.getElementById('saveBtn').innerText = "Ekle";
+        document.getElementById('saveBtn').style.background = "var(--ana-renk)";
+        document.getElementById('cancelBtn').style.display = "none";
+        document.getElementById('baslik').innerText = "Alan Kaydı";
+    }
+
+    function veriyiSil(id) {
+        if(confirm("Silmek istediğine emin misin?")) {
+            let veriler = JSON.parse(localStorage.getItem('alanBilgileri')) || [];
+            veriler = veriler.filter(v => v.id !== id);
+            localStorage.setItem('alanBilgileri', JSON.stringify(veriler));
+            listele();
+            formuSifirla();
+        }
+    }
+</script>
+
+</body>
+</html>

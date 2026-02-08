@@ -4,75 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Rota Bulut Takip</title>
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <style>
         :root { --primary: #007AFF; --bg: #F2F2F7; --card-bg: #FFFFFF; --danger: #FF3B30; --success: #34C759; }
         body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); margin: 0; padding: env(safe-area-inset-top) 15px 100px 15px; }
-        
-        /* Rapor Kartları */
         .report-scroll { display: flex; gap: 10px; overflow-x: auto; padding: 5px 5px 15px; margin-bottom: 10px; -webkit-overflow-scrolling: touch; }
-        .report-scroll::-webkit-scrollbar { display: none; }
         .report-item { min-width: 130px; background: var(--card-bg); padding: 12px; border-radius: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); flex-shrink: 0; border-left: 4px solid var(--primary); }
-        .month-name { font-size: 12px; font-weight: bold; color: #1c1c1e; display: block; margin-bottom: 5px; }
-        .month-stat { font-size: 13px; display: block; margin: 2px 0; }
-        
-        /* İstatistik Paneli */
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0 20px; }
         .stat-card { background: var(--card-bg); padding: 12px; border-radius: 12px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .full-width { grid-column: span 2; }
         .stat-val { display: block; font-size: 18px; font-weight: bold; }
         .stat-label { font-size: 10px; color: #8e8e93; text-transform: uppercase; }
-
         .search-box { background: #E3E3E8; border: none; padding: 12px 15px; border-radius: 10px; width: 100%; box-sizing: border-box; font-size: 16px; margin-bottom: 15px; }
-
-        /* Kayıt Listesi */
         .card { background: var(--card-bg); border-radius: 14px; padding: 5px 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 15px; }
         .data-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 15px 0; border-bottom: 0.5px solid #d1d1d6; }
-        .data-row:last-child { border-bottom: none; }
-        
-        .data-info b { font-size: 16px; display: block; color: #1c1c1e; }
-        .data-info span { color: #8e8e93; font-size: 12px; }
-        .detay-satir { font-size: 11px; color: #666; margin-top: 4px; }
+        .data-info b { font-size: 16px; display: block; }
         .price-info { text-align: right; }
-        .total-line { font-weight: bold; font-size: 16px; }
-        
-        /* Modal ve Form Elemanları */
         .fab { position: fixed; bottom: 30px; right: 20px; width: 60px; height: 60px; background: var(--primary); border-radius: 30px; display: flex; align-items: center; justify-content: center; color: white; font-size: 30px; box-shadow: 0 4px 15px rgba(0,122,255,0.4); z-index: 99; border: none; }
         #modalOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 100; }
         .modal-content { position: fixed; bottom: 0; left: 0; width: 100%; background: white; border-radius: 20px 20px 0 0; padding: 20px 20px 40px; box-sizing: border-box; transform: translateY(100%); transition: transform 0.3s ease-out; z-index: 101; overflow-y: auto; max-height: 95vh; }
         .modal-active .modal-content { transform: translateY(0); }
-        
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 5px; }
-        label { font-size: 11px; color: #8e8e93; margin-left: 5px; font-weight: 600; display: block; margin-top: 8px; }
-        
-        /* INPUT DÜZELTMELERİ */
-        input, select, textarea { 
-            width: 100%; 
-            padding: 12px; 
-            margin: 4px 0; 
-            border: 1px solid #d1d1d6; 
-            border-radius: 10px; 
-            font-size: 16px; 
-            background: #F9F9F9; 
-            box-sizing: border-box; 
-            -webkit-appearance: none; /* iOS default stilini kaldırır */
-            appearance: none;
-        }
-
-        /* Tarih Alanı Özel Hizalama */
-        input[type="date"] {
-            min-height: 48px;
-            display: flex;
-            align-items: center;
-            line-height: normal;
-        }
-
-        .btn-main { background: var(--primary); color: white; width: 100%; padding: 15px; border-radius: 12px; font-weight: bold; border: none; font-size: 16px; margin-top: 15px; }
-        .loading-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.7); z-index:999; justify-content:center; align-items:center; font-weight:bold; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        input, select, textarea { width: 100%; padding: 12px; margin: 4px 0; border: 1px solid #d1d1d6; border-radius: 10px; font-size: 16px; box-sizing: border-box; }
+        .btn-main { background: var(--primary); color: white; width: 100%; padding: 15px; border-radius: 12px; font-weight: bold; border: none; margin-top: 15px; }
+        .loading-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.7); z-index:999; justify-content:center; align-items:center; }
     </style>
 </head>
 <body>
@@ -80,16 +35,16 @@
 <div id="loader" class="loading-overlay">İşleniyor...</div>
 
 <div class="container">
-    <h2 style="margin: 20px 5px 10px;">Aylık Finansal Rapor</h2>
+    <h2 style="margin: 20px 5px 10px;">Aylık Rapor</h2>
     <div class="report-scroll" id="aylikRaporContainer"></div>
 
     <div class="stats-grid">
         <div class="stat-card"><span class="stat-val" id="totalCiro" style="color:var(--primary)">0 TL</span><span class="stat-label">Ciro</span></div>
         <div class="stat-card"><span class="stat-val" id="totalGider" style="color:var(--danger)">0 TL</span><span class="stat-label">Gider</span></div>
-        <div class="stat-card full-width"><span class="stat-val" id="netKar" style="color:var(--success); font-size: 22px;">0 TL</span><span class="stat-label">Genel Net</span></div>
+        <div class="stat-card full-width"><span class="stat-val" id="netKar" style="color:var(--success); font-size: 22px;">0 TL</span><span class="stat-label">Net Kar</span></div>
     </div>
 
-    <input type="text" id="search" class="search-box" placeholder="🔍 Ara..." oninput="listele()">
+    <input type="text" id="search" class="search-box" placeholder="🔍 Ara (Rota, Tarih, Fatura)..." oninput="listele()">
     <div id="listeContainer"></div>
 </div>
 
@@ -108,7 +63,7 @@
     </div>
     <div class="form-grid">
         <div><label>Fatura No</label><input type="text" id="faturaNo"></div>
-        <div><label>Ödeme (Alınan)</label><input type="number" id="odemeMiktari"></div>
+        <div><label>Ödeme Alınan</label><input type="number" id="odemeMiktari"></div>
     </div>
     <div class="form-grid">
         <div><label>Fiyat</label><input type="number" id="fiyat"></div>
@@ -116,10 +71,10 @@
     </div>
     <div class="form-grid">
         <div><label>Yakıt</label><input type="number" id="yakit"></div>
-        <div><label>Haftalık Gider</label><input type="number" id="giderHaftalik"></div>
+        <div><label>Ek Gider</label><input type="number" id="giderHaftalik"></div>
     </div>
     <label>Açıklama</label><textarea id="aciklama" rows="2"></textarea>
-    <button class="btn-main" onclick="veriyiKaydet()">Kaydet</button>
+    <button class="btn-main" onclick="veriyiKaydet()">Buluta Kaydet</button>
 </div>
 
 <script>
@@ -136,8 +91,8 @@
     async function verileriGetir() {
         loading(true);
         const { data, error } = await _supabase.from('seferler').select('*').order('tarih', { ascending: false });
-        if (error) alert("Veri çekme hatası: " + error.message);
-        else { tumVeriler = data || []; listele(); }
+        if (error) console.error("Hata:", error);
+        else { tumVeriler = data; listele(); }
         loading(false);
     }
 
@@ -147,32 +102,32 @@
         
         raporUret(tumVeriler);
 
-        const filtrelenmiş = tumVeriler.filter(v => 
-            v.rota.toLowerCase().includes(arama) || v.tarih.includes(arama) || (v.faturaNo && v.faturaNo.toLowerCase().includes(arama))
+        const filtrelenmis = tumVeriler.filter(v => 
+            v.rota.toLowerCase().includes(arama) || v.tarih.includes(arama) || (v.fatura_no && v.fatura_no.toLowerCase().includes(arama))
         );
 
-        filtrelenmiş.forEach(v => {
+        filtrelenmis.forEach(v => {
             c += (v.fiyat || 0);
-            g += ((v.komisyon || 0) + (v.yakit || 0) + (v.giderHaftalik || 0));
+            g += ((v.komisyon || 0) + (v.yakit || 0) + (v.gider_haftalik || 0));
         });
 
         document.getElementById('totalCiro').innerText = c.toLocaleString() + " TL";
         document.getElementById('totalGider').innerText = g.toLocaleString() + " TL";
         document.getElementById('netKar').innerText = (c - g).toLocaleString() + " TL";
 
-        document.getElementById('listeContainer').innerHTML = filtrelenmiş.map(v => `
+        document.getElementById('listeContainer').innerHTML = filtrelenmis.map(v => `
             <div class="card"><div class="data-row">
                 <div class="data-info">
-                    <b>${v.rota} <small style="color:#8e8e93">${v.faturaNo || ''}</small></b>
-                    <span>${v.tarih ? v.tarih.split('-').reverse().join('.') : ''}</span>
-                    <div class="detay-satir">K: ${v.komisyon} | Y: ${v.yakit} | H: ${v.giderHaftalik}</div>
+                    <b>${v.rota} <small style="color:#8e8e93">${v.fatura_no || ''}</small></b>
+                    <span style="font-size:12px; color:#8e8e93">${v.tarih.split('-').reverse().join('.')}</span>
+                    <div style="font-size:11px; color:#666; margin-top:4px;">K: ${v.komisyon} | Y: ${v.yakit} | G: ${v.gider_haftalik}</div>
                 </div>
                 <div class="price-info">
-                    <div class="total-line">${(v.fiyat || 0).toLocaleString()} TL</div>
-                    <div style="font-size:12px; color:${(v.odemeMiktari || 0) < (v.fiyat || 0) ? 'var(--danger)':'var(--success)'}">Ö: ${(v.odemeMiktari || 0).toLocaleString()}</div>
+                    <div style="font-weight:bold">${v.fiyat.toLocaleString()} TL</div>
+                    <div style="font-size:12px; color:${v.odeme_miktari < v.fiyat ? 'var(--danger)':'var(--success)'}">Ö: ${v.odeme_miktari.toLocaleString()}</div>
                     <div style="margin-top:8px; font-size:12px;">
-                        <span style="color:var(--primary); cursor:pointer;" onclick="duzenle(${v.id})">Düzelt</span> | 
-                        <span style="color:var(--danger); cursor:pointer;" onclick="sil(${v.id})">Sil</span>
+                        <span style="color:var(--primary)" onclick="duzenle(${v.id})">Düzelt</span> | 
+                        <span style="color:var(--danger)" onclick="sil(${v.id})">Sil</span>
                     </div>
                 </div>
             </div></div>`).join('');
@@ -183,34 +138,36 @@
         const parse = (val) => parseFloat(val) || 0;
         const editId = d('editId');
 
+        // Veritabanı sütun isimleri güncellendi (fatura_no, odeme_miktari vb.)
         const veri = {
-            tarih: d('tarih'), rota: d('rota'), faturaNo: d('faturaNo'),
-            odemeMiktari: parse(d('odemeMiktari')), fiyat: parse(d('fiyat')),
-            komisyon: parse(d('komisyon')), yakit: parse(d('yakit')),
-            giderHaftalik: parse(d('giderHaftalik')), aciklama: d('aciklama')
+            tarih: d('tarih'), 
+            rota: d('rota'), 
+            fatura_no: d('faturaNo'),
+            odeme_miktari: parse(d('odemeMiktari')), 
+            fiyat: parse(d('fiyat')),
+            komisyon: parse(d('komisyon')), 
+            yakit: parse(d('yakit')),
+            gider_haftalik: parse(d('giderHaftalik')), 
+            aciklama: d('aciklama')
         };
 
-        if(!veri.tarih || !veri.rota) return alert("Tarih ve Rota zorunludur!");
+        if(!veri.tarih || !veri.rota) return alert("Eksikleri doldurun!");
         loading(true);
 
-        let response;
-        if(editId) {
-            response = await _supabase.from('seferler').update(veri).eq('id', editId);
-        } else {
-            response = await _supabase.from('seferler').insert([veri]);
-        }
+        let res = editId ? 
+            await _supabase.from('seferler').update(veri).eq('id', editId) : 
+            await _supabase.from('seferler').insert([veri]);
 
-        if(response.error) alert("Hata: " + response.error.message);
-        else { modalKapat(); await verileriGetir(); }
+        if(res.error) alert("Hata oluştu: " + res.error.message);
+        else { modalKapat(); verileriGetir(); }
         loading(false);
     }
 
     async function sil(id) {
-        if(!confirm("Bu kaydı buluttan silmek istediğine emin misin?")) return;
+        if(!confirm("Silinsin mi?")) return;
         loading(true);
         const { error } = await _supabase.from('seferler').delete().eq('id', id);
-        if(error) alert(error.message);
-        else await verileriGetir();
+        if(error) alert(error.message); else verileriGetir();
         loading(false);
     }
 
@@ -225,10 +182,14 @@
                 let vt = new Date(v.tarih);
                 if(vt.getMonth() === ayNo && vt.getFullYear() === yilNo) {
                     ayCiro += (v.fiyat || 0);
-                    ayNet += ((v.fiyat || 0) - ((v.komisyon || 0) + (v.yakit || 0) + (v.giderHaftalik || 0)));
+                    ayNet += (v.fiyat - (v.komisyon + v.yakit + v.gider_haftalik));
                 }
             });
-            html += `<div class="report-item"><span class="month-name">${aylar[ayNo]} ${yilNo}</span><span class="month-stat">Ciro: <b>${ayCiro.toLocaleString()}</b></span><span class="month-stat" style="color:${ayNet < 0 ? 'var(--danger)':'var(--success)'}">Net: <b>${ayNet.toLocaleString()}</b></span></div>`;
+            html += `<div class="report-item">
+                <span class="month-name">${aylar[ayNo]} ${yilNo}</span>
+                <span style="font-size:13px;">Ciro: <b>${ayCiro.toLocaleString()}</b></span><br>
+                <span style="font-size:13px; color:${ayNet < 0 ? 'var(--danger)':'var(--success)'}">Net: <b>${ayNet.toLocaleString()}</b></span>
+            </div>`;
         }
         document.getElementById('aylikRaporContainer').innerHTML = html;
     }
@@ -237,43 +198,30 @@
         const v = tumVeriler.find(x => x.id == id);
         document.getElementById('tarih').value = v.tarih;
         document.getElementById('rota').value = v.rota;
-        document.getElementById('faturaNo').value = v.faturaNo || '';
-        document.getElementById('odemeMiktari').value = v.odemeMiktari;
+        document.getElementById('faturaNo').value = v.fatura_no || '';
+        document.getElementById('odemeMiktari').value = v.odeme_miktari;
         document.getElementById('fiyat').value = v.fiyat;
         document.getElementById('komisyon').value = v.komisyon;
         document.getElementById('yakit').value = v.yakit;
-        document.getElementById('giderHaftalik').value = v.giderHaftalik;
+        document.getElementById('giderHaftalik').value = v.gider_haftalik;
         document.getElementById('aciklama').value = v.aciklama || '';
         document.getElementById('editId').value = v.id;
         document.getElementById('modalBaslik').innerText = "Kaydı Güncelle";
-        modalAc(v.id);
+        modalAc(true);
     }
 
-    function modalAc(id) {
+    function modalAc(isEdit) {
         document.getElementById('modalOverlay').style.display = 'block';
         setTimeout(() => document.body.classList.add('modal-active'), 10);
-        if(!id) { 
-            formuSifirla(); 
-            document.getElementById('tarih').value = new Date().toISOString().split('T')[0]; 
-            document.getElementById('modalBaslik').innerText = "Yeni Kayıt";
+        if(!isEdit) {
+            formuSifirla();
+            document.getElementById('tarih').value = new Date().toISOString().split('T')[0];
         }
     }
-    
-    function modalKapat() { 
-        document.body.classList.remove('modal-active'); 
-        setTimeout(() => { document.getElementById('modalOverlay').style.display = 'none'; }, 300); 
-    }
-    
-    function formuSifirla() { 
-        ['editId', 'rota', 'faturaNo', 'odemeMiktari', 'fiyat', 'komisyon', 'yakit', 'giderHaftalik', 'aciklama'].forEach(id => document.getElementById(id).value = ''); 
-    }
-    
-    function fiyatGuncelle() { 
-        const r = document.getElementById('rota').value; 
-        if(tarifeler[r] !== undefined) document.getElementById('fiyat').value = tarifeler[r] || ""; 
-    }
-    
-    function loading(show) { document.getElementById('loader').style.display = show ? 'flex' : 'none'; }
+    function modalKapat() { document.body.classList.remove('modal-active'); setTimeout(() => { document.getElementById('modalOverlay').style.display = 'none'; }, 300); }
+    function formuSifirla() { ['editId','faturaNo','odemeMiktari','fiyat','komisyon','yakit','giderHaftalik','aciklama'].forEach(id => document.getElementById(id).value = ''); document.getElementById('rota').value = ""; }
+    function fiyatGuncelle() { const r = document.getElementById('rota').value; if(tarifeler[r]) document.getElementById('fiyat').value = tarifeler[r]; }
+    function loading(s) { document.getElementById('loader').style.display = s ? 'flex' : 'none'; }
 </script>
 </body>
 </html>
